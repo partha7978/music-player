@@ -6,24 +6,67 @@ import PlayIcon from "../../assets/play.svg";
 import PreviousIcon from "../../assets/previous.svg";
 import SoundIcon from "../../assets/sound.svg";
 import ThreeDotIcon from "../../assets/threeDot.svg";
+import { useDispatch, useSelector } from "react-redux";
 
 const SongDetails = () => {
-
-  const ref = useRef<HTMLAudioElement>(null);
+  const playSong = useSelector((state) => state.currentSong?.items);
+  const ref = useRef();
 
   const [song, setSong] = useState({});
   const [isPlaying, setIsPlaying] = useState(false);
-  const [currentSong, setCurrentSong] = useState(0);
+  const [progressBar, setProgressBar] = useState(0);
+
+  useEffect(() => {
+    if (playSong && playSong.url) {
+      setSong(playSong);
+      console.log(playSong, 'playSong');
+      ref.current?.load();
+    }
+  }, [playSong]);
 
   const handlePlayPause = () => {
-    setIsPlaying(!isPlaying);
-
     if (isPlaying) {
       ref.current?.play();
     } else {
       ref.current?.pause();
     }
+    setIsPlaying(!isPlaying);
   };
+
+  const handleLoadedData = () => {
+    ref.current?.play();
+    console.log(ref.current.duration, 'duration');
+
+    const progressBar = (ref.current.currentTime / ref.current.duration) * 100;
+    setProgressBar(progressBar);
+    console.log(progressBar, 'progressBar');
+    setIsPlaying(false);
+  };
+
+  useEffect(() => {
+    if (playSong && playSong.url) {
+      setSong(playSong);
+      ref.current?.load();
+    }
+  }, [playSong]);
+
+  const handleTimeUpdate = () => {
+    const currentTime = ref.current.currentTime;
+    const duration = ref.current.duration;
+    const progress = (currentTime / duration) * 100;
+    setProgressBar(progress);
+  };
+
+  useEffect(() => {
+    const currentRef = ref.current;
+    currentRef.addEventListener("timeupdate", handleTimeUpdate);
+    
+    return () => {
+      currentRef.removeEventListener("timeupdate", handleTimeUpdate);
+    };
+  }, []);
+
+
   return (
     <>
       <div className="song-details__container">
@@ -33,14 +76,23 @@ const SongDetails = () => {
         </div>
         <div className="song-image">
           <img
-            src="https://images.unsplash.com/photo-1608739871923-7da6d372f3c2?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTgzfHxmYXNoaW9ufGVufDB8MHwwfHx8MA%3D%3D"
+            src={
+              song.cover
+                ? `https://cms.samespace.com/assets/${song.cover}`
+                : "https://images.unsplash.com/photo-1608739871923-7da6d372f3c2?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTgzfHxmYXNoaW9ufGVufDB8MHwwfHx8MA%3D%3D"
+            }
             alt="Album Cover"
             className="album-cover"
           />
         </div>
         <div className="song-action">
           <div className="progressbar">
-            <div className="progress"></div>
+            <div className="progress">
+              <div
+                className="bar"
+                style={{ width: `${progressBar}%`, backgroundColor: `${song.accent}` }}  
+              ></div>
+            </div>
           </div>
           <div className="action">
             <button className="info-btn">
@@ -64,8 +116,7 @@ const SongDetails = () => {
         </div>
       </div>
 
-      <audio ref={ref} src="https://pub-172b4845a7e24a16956308706aaf24c2.r2.dev/illusion-feel-ambient-guitar-146100.mp3" />
-
+      <audio ref={ref} src={song.url} onLoadedData={handleLoadedData} />
 
       <div className="song-details__mobile">
         <div className="mobile__container">

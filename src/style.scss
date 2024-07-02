@@ -119,20 +119,9 @@ body {
     flex-direction: column;
     justify-content: start;
     align-items: start;
-    padding: 1rem;
-    box-sizing: border-box;
-    border-radius: 8px;
-    gap: 1.5rem;
-    transition: all 0.3s ease-in-out;
+    gap: 0.5rem;
 
-    &:hover {
-      background: rgba(255, 255, 255, 0.1);
-      // box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      cursor: pointer;
-      // border: 1px solid rgba(255, 255, 255, 0.3);
-    }
+    overflow-y: scroll;
 
     p {
       margin: 0;
@@ -145,6 +134,20 @@ body {
       justify-content: start;
       align-items: center;
       gap: 1rem;
+
+      padding: 1rem;
+      box-sizing: border-box;
+      border-radius: 8px;
+      transition: all 0.2s ease-in-out;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.1);
+        // box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        cursor: pointer;
+        // border: 1px solid rgba(255, 255, 255, 0.3);
+      }
 
       img.album-cover {
         width: 50px;
@@ -220,6 +223,7 @@ body {
 
   .song-image {
     width: 100%;
+    height: 350px;
     display: flex;
     justify-content: start;
     align-items: center;
@@ -228,6 +232,10 @@ body {
       width: 100%;
       height: 100%;
       border-radius: 10px;
+    }
+
+    @media screen and (max-width: 1000px) {
+      height: 250px;
     }
 
     @media screen and (max-width: 768px) {
@@ -256,6 +264,13 @@ body {
         height: 5px;
         border-radius: 5px;
         background-color: white;
+
+        .bar {
+          width: 0%;
+          height: 100%;
+          border-radius: 5px;
+          opacity: 0.6;
+        }
       }
 
       @media screen and (max-width: 768px) {
@@ -339,7 +354,6 @@ body {
 
   @media screen and (max-width: 768px) {
     display: none;
-    background-color: red;
   }
 }
 
