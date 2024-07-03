@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { FiSearch } from "react-icons/fi";
 import { useDispatch, useSelector } from "react-redux";
 import { addSongList, clearAllSongList } from "../../store/songListSlice";
@@ -6,9 +6,10 @@ import { addCurrentSong, removeCurrentSong } from "../../store/currentSongSlice"
 const SongList = () => {
   const API_URL = "https://cms.samespace.com/items/songs";
   const dispatch = useDispatch();
+  const currentPlayingSong = useSelector((state) => state.currentSong.items);
 
-  // const songs = useSelector((state) => state.songList.items);
   const [songList, setSongList] = useState([]);
+  const inputRef = useRef();
 
   const formatDuration = (seconds) => {
     const minutes = Math.floor(seconds / 60);
@@ -28,11 +29,12 @@ const SongList = () => {
 
   const handleAllSongWithDuration = async (songs) => {
     const songsWithDuration = await Promise.all(
-      songs.map(async (song) => {
+      songs.map(async (song, index) => {
         const audio = new Audio(song.url);
         await new Promise((resolve) => {
           audio.addEventListener("loadedmetadata", () => {
             song.duration = formatDuration(audio.duration);
+            song.index = index;
             resolve();
           });
         });
@@ -41,6 +43,8 @@ const SongList = () => {
     );
 
     setSongList(songsWithDuration);
+    dispatch(clearAllSongList());
+    dispatch(addSongList(songsWithDuration));
   };
 
 
@@ -48,10 +52,35 @@ const SongList = () => {
     fetchSongs();
   }, []);
 
+  useEffect(() => {
+    if (currentPlayingSong) {
+      const rgb = hexToRgb(currentPlayingSong.accent);
+      const mainContainer = document.getElementsByClassName("main-container")[0];
+      const mobileContainer = document.getElementsByClassName("song-details__mobile")[0];
+      const dynamicBackground = `linear-gradient(235deg, #191414 -30%, rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.1) 150%)`;
+      const dynamicMobileBackground = `linear-gradient(235deg, #191414 -30%, ${currentPlayingSong.accent} 250%)`;
+      if (mainContainer) {
+        mainContainer.style.backgroundColor = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.1)`;
+        document.querySelector('input').style.background = dynamicBackground;
+        mobileContainer.style.background = dynamicMobileBackground;
+      }
+    }
+  }, [currentPlayingSong]);
+
   const setCurrentSong = (song) => {
     dispatch(removeCurrentSong());
     dispatch(addCurrentSong(song));
   }
+
+  const hexToRgb = (hex = '#000000') => {
+    hex = hex?.replace(/^#/, '');
+  
+    let r = parseInt(hex.substring(0, 2), 16);
+    let g = parseInt(hex.substring(2, 4), 16);
+    let b = parseInt(hex.substring(4, 6), 16);
+
+    return { r, g, b };
+  };
 
   return (
     <div className="song-list__container">
@@ -62,6 +91,7 @@ const SongList = () => {
 
       <div className="search-bar">
         <input
+          ref={inputRef}
           type="text"
           placeholder="Search Song, Artist"
           className="search-bar__input"
@@ -73,7 +103,7 @@ const SongList = () => {
 
       <div className="song-list__items">
         {songList.map((song) => (
-          <div className="song-list__item" key={song.id} onClick={() => setCurrentSong(song)}>
+          <div className={`song-list__item ${currentPlayingSong.index === song.index ? 'active' : ''}`} key={song.id} onClick={() => setCurrentSong(song)}>
             <img
               src={
                 song.cover

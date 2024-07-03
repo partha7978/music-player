@@ -1,4 +1,3 @@
-import React from 'react'
 import SpotifyLogo from '../../assets/spotifyLogo.svg'
 import ProfileIcon from '../../assets/Profile.svg'
 const Sidenav = () => {

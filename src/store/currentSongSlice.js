@@ -5,7 +5,6 @@ const currentSongSlice = createSlice({
     name: 'currentSong',
     initialState: {
         items: {},
-        resName: "",
     },
     reducers: {
         addCurrentSong: (state, action) => {
