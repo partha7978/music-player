@@ -2,6 +2,8 @@
 ### A music player made using ReactJS and a custom API.
 <br>
 
+- [Deployed Link](https://music-player-by-parth.vercel.app/)
+
 ## Contributors
 
 - [Partha](https://www.github.com/partha7978)
