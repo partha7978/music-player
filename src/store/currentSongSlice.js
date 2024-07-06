@@ -11,7 +11,7 @@ const currentSongSlice = createSlice({
             state.items = action.payload;
         },
         removeCurrentSong: (state, action) => {
-            state.items = null;
+            state.items = {};
         },
     }
 })

@@ -69,16 +69,17 @@ body {
     align-items: center;
     gap: 2rem;
 
-    a {
+    span {
       text-decoration: none;
       color: white;
-      font-size: 1.2rem;
+      font-size: 1.6rem;
       font-weight: 600;
       cursor: pointer;
-    }
-
-    a:last-of-type {
       opacity: 0.5;
+
+      &.active {
+        opacity: 1;
+      }
     }
   }
 
@@ -372,6 +373,7 @@ body {
 
   h1 {
     text-align: center;
+    font-size: 1.2rem;
   }
   p {
     text-align: center;

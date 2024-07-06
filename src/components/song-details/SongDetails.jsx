@@ -18,6 +18,7 @@ const SongDetails = () => {
   const [song, setSong] = useState({});
   const [isPlaying, setIsPlaying] = useState(false);
   const [progressBar, setProgressBar] = useState(0);
+  const [songListWithIndex, setSongListWithIndex] = useState([]);
 
   useEffect(() => {
     if (playSong && playSong.url) {
@@ -25,6 +26,29 @@ const SongDetails = () => {
       ref.current?.load();
     }
   }, [playSong]);
+
+  useEffect(() => {
+    if (songList && songList.length > 0) {
+      setSongsWithIndex(songList[0]);
+    }
+  }, [songList]);
+
+  const setSongsWithIndex = async (songList) => {
+    const songsWithDuration = await Promise.all(
+      songList.map(async (song, index) => {
+        const audio = new Audio(song.url);
+        await new Promise((resolve) => {
+          audio.addEventListener("loadedmetadata", () => {
+            resolve();
+          });
+        });
+
+        return { ...song, index };
+      })
+    );
+
+    setSongListWithIndex(songsWithDuration);
+  };
 
   const handlePlayPause = () => {
     if (isPlaying) {
@@ -76,17 +100,24 @@ const SongDetails = () => {
   };
 
   const handleNextPrevious = (type) => {
-    let newIndex;
-    if (type === "next") {
-      newIndex = song.index + 1;
-    } else {
-      newIndex = song.index - 1;
+    if (!playSong) return;
+
+    // Find the current song in songListWithIndex
+    const currentSongIndex = songListWithIndex.findIndex(
+      (song) => song.id === playSong.id
+    );
+
+    if (currentSongIndex !== undefined) {
+      let newIndex;
+      if (type === "next") {
+        newIndex = currentSongIndex + 1;
+      } else {
+        newIndex = currentSongIndex - 1;
+      }
+      const newSong = songListWithIndex[newIndex];
+      setSong(newSong);
+      dispatch(addCurrentSong(newSong));
     }
-
-    const newSong = songList[0][newIndex];
-    setSong(newSong);
-
-    dispatch(addCurrentSong(newSong));
   };
 
   const handleSound = () => {
@@ -98,13 +129,13 @@ const SongDetails = () => {
       <div className="song-details__container">
         {Object.keys(song).length === 0 ? (
           <div className="no-songs__container">
-            <h1 className="song-title">Play Your Favorite Song 😌</h1>
+            <h1 className="song-title">Play Your Favorite Song 🎸</h1>
           </div>
         ) : (
           <>
             <div className="song-details">
-              <p className="song-name">Song Name</p>
-              <p className="artist-name">Artist Name</p>
+              <p className="song-name">{song.name}</p>
+              <p className="artist-name">{song.artist}</p>
             </div>
             <div className="song-image">
               <img
@@ -130,13 +161,16 @@ const SongDetails = () => {
                 </div>
               </div>
               <div className="action">
-                <button className="info-btn" onClick={() => alert('This Feature Is Coming Soon')}>
+                <button
+                  className="info-btn"
+                  onClick={() => alert("This Feature Is Coming Soon")}
+                >
                   <HiOutlineDotsHorizontal />
                 </button>
                 <div className="main-action">
                   <button
                     className={`previous ${song.index === 0 ? "disabled" : ""}`}
-                    disabled={song ? song.index === 0 : false}
+                    disabled={song ? song === songListWithIndex[0] : false}
                     onClick={() => handleNextPrevious("prev")}
                   >
                     <img src={PreviousIcon} alt="Sound Icon" />
@@ -152,7 +186,9 @@ const SongDetails = () => {
                       song.index === songList[0]?.length - 1 ? "disabled" : ""
                     }`}
                     disabled={
-                      song ? song.index === songList[0]?.length - 1 : false
+                      song
+                        ? song === songListWithIndex[songListWithIndex.length - 1]
+                        : false
                     }
                     onClick={() => handleNextPrevious("next")}
                   >
@@ -160,7 +196,11 @@ const SongDetails = () => {
                   </button>
                 </div>
                 <button className="sound" onClick={handleSound}>
-                    {ref.current.muted ? <FaVolumeMute  /> :   <img src={SoundIcon} alt="Sound Icon" />}
+                  {ref.current.muted ? (
+                    <FaVolumeMute />
+                  ) : (
+                    <img src={SoundIcon} alt="Sound Icon" />
+                  )}
                 </button>
               </div>
             </div>
@@ -171,54 +211,61 @@ const SongDetails = () => {
       <audio ref={ref} src={song.url} onLoadedData={handleLoadedData} />
 
       <div className="song-details__mobile">
-       {Object.keys(song).length === 0 ? (
-         <div className="no-songs__container">
-           <p className="song-title">Play Your Favorite Song 😌</p>
-         </div>
-       ): (
-        <div className="mobile__container">
-        <div className="song-details__section">
-          <div className="song-image">
-            <img
-              src={
-                song.cover
-                  ? `https://cms.samespace.com/assets/${song.cover}`
-                  : "https://images.unsplash.com/photo-1608739871923-7da6d372f3c2?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTgzfHxmYXNoaW9ufGVufDB8MHwwfHx8MA%3D%3D"
-              }
-              alt="Album Cover"
-              className="album-cover"
-            />
+        {Object.keys(song).length === 0 ? (
+          <div className="no-songs__container">
+            <p className="song-title">Play Your Favorite Song 🎸</p>
           </div>
-          <div className="song-details">
-          <p className="song-name">{song.name}</p>
-          <p className="artist-name">{song.artist}</p>
+        ) : (
+          <div className="mobile__container">
+            <div className="song-details__section">
+              <div className="song-image">
+                <img
+                  src={
+                    song.cover
+                      ? `https://cms.samespace.com/assets/${song.cover}`
+                      : "https://images.unsplash.com/photo-1608739871923-7da6d372f3c2?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTgzfHxmYXNoaW9ufGVufDB8MHwwfHx8MA%3D%3D"
+                  }
+                  alt="Album Cover"
+                  className="album-cover"
+                />
+              </div>
+              <div className="song-details">
+                <p className="song-name">{song.name}</p>
+                <p className="artist-name">{song.artist}</p>
+              </div>
+            </div>
+            <div className="action">
+              <div className="main-action">
+                <button
+                  className={`previous ${song.index === 0 ? "disabled" : ""}`}
+                  disabled={song ? song === songListWithIndex[0] : false}
+                  onClick={() => handleNextPrevious("prev")}
+                >
+                  <img src={PreviousIcon} alt="Sound Icon" />
+                </button>
+                <button className="play-pause-btn" onClick={handlePlayPause}>
+                  <img
+                    src={isPlaying ? PauseIcon : PlayIcon}
+                    alt="Sound Icon"
+                  />
+                </button>
+                <button
+                  className={`next ${
+                    song.index === songList[0]?.length - 1 ? "disabled" : ""
+                  }`}
+                  disabled={
+                    song
+                      ? song === songListWithIndex[songListWithIndex.length - 1]
+                      : false
+                  }
+                  onClick={() => handleNextPrevious("next")}
+                >
+                  <img src={NextIcon} alt="Sound Icon" />
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
-        <div className="action">
-          <div className="main-action">
-            <button
-              className={`previous ${song.index === 0 ? "disabled" : ""}`}
-              disabled={song ? song.index === 0 : false}
-              onClick={() => handleNextPrevious("prev")}
-            >
-              <img src={PreviousIcon} alt="Sound Icon" />
-            </button>
-            <button className="play-pause-btn" onClick={handlePlayPause}>
-              <img src={isPlaying ? PauseIcon : PlayIcon} alt="Sound Icon" />
-            </button>
-            <button
-              className={`next ${
-                song.index === songList[0]?.length - 1 ? "disabled" : ""
-              }`}
-              disabled={song ? song.index === songList[0]?.length - 1 : false}
-              onClick={() => handleNextPrevious("next")}
-            >
-              <img src={NextIcon} alt="Sound Icon" />
-            </button>
-          </div>
-        </div>
-      </div>
-       )}
+        )}
       </div>
     </>
   );
