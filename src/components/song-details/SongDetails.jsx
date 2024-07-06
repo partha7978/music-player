@@ -20,6 +20,7 @@ const SongDetails = () => {
   const [progressBar, setProgressBar] = useState(0);
   const [songListWithIndex, setSongListWithIndex] = useState([]);
 
+  // setting the current playing song
   useEffect(() => {
     if (playSong && playSong.url) {
       setSong(playSong);
@@ -27,12 +28,14 @@ const SongDetails = () => {
     }
   }, [playSong]);
 
+  // setting the songList with index
   useEffect(() => {
     if (songList && songList.length > 0) {
       setSongsWithIndex(songList[0]);
     }
   }, [songList]);
 
+  // function to set the index
   const setSongsWithIndex = async (songList) => {
     const songsWithDuration = await Promise.all(
       songList.map(async (song, index) => {
@@ -50,6 +53,7 @@ const SongDetails = () => {
     setSongListWithIndex(songsWithDuration);
   };
 
+  // function to handle play and pause
   const handlePlayPause = () => {
     if (isPlaying) {
       ref.current?.play();
@@ -59,6 +63,7 @@ const SongDetails = () => {
     setIsPlaying(!isPlaying);
   };
 
+  //handling progressbar
   const handleLoadedData = () => {
     ref.current?.play();
 
@@ -67,13 +72,7 @@ const SongDetails = () => {
     setIsPlaying(false);
   };
 
-  useEffect(() => {
-    if (playSong && playSong.url) {
-      setSong(playSong);
-      ref.current?.load();
-    }
-  }, [playSong]);
-
+  // function to handle real time show of song progress
   const handleTimeUpdate = () => {
     const currentTime = ref.current.currentTime;
     const duration = ref.current.duration;
@@ -90,15 +89,17 @@ const SongDetails = () => {
     };
   }, []);
 
+  // function to handle progressbar when user click on any part of it and setting the song accordingly
   const handleProgressBar = (e) => {
-    const progressBarWidth = e.target.getBoundingClientRect().width;
+    const progressBarWidth = e.target?.getBoundingClientRect()?.width;
 
-    const clickX = e.nativeEvent.offsetX;
+    const clickX = e.nativeEvent?.offsetX;
     const seek = (clickX / progressBarWidth) * ref.current.duration;
 
     ref.current.currentTime = seek;
   };
 
+  // function to handle next and previous
   const handleNextPrevious = (type) => {
     if (!playSong) return;
 
@@ -120,6 +121,7 @@ const SongDetails = () => {
     }
   };
 
+  // function to handle volume
   const handleSound = () => {
     ref.current.muted = !ref.current.muted;
   };
@@ -163,31 +165,39 @@ const SongDetails = () => {
               <div className="action">
                 <button
                   className="info-btn"
+                  aria-label="More Info"
                   onClick={() => alert("This Feature Is Coming Soon")}
                 >
                   <HiOutlineDotsHorizontal />
                 </button>
                 <div className="main-action">
                   <button
+                    aria-label="Previous Song"
                     className={`previous ${song.index === 0 ? "disabled" : ""}`}
                     disabled={song ? song === songListWithIndex[0] : false}
                     onClick={() => handleNextPrevious("prev")}
                   >
                     <img src={PreviousIcon} alt="Sound Icon" />
                   </button>
-                  <button className="play-pause-btn" onClick={handlePlayPause}>
+                  <button
+                    className="play-pause-btn"
+                    onClick={handlePlayPause}
+                    aria-label="Play/Pause"
+                  >
                     <img
                       src={isPlaying ? PauseIcon : PlayIcon}
                       alt="Sound Icon"
                     />
                   </button>
                   <button
+                    aria-label="Next Song"
                     className={`next ${
                       song.index === songList[0]?.length - 1 ? "disabled" : ""
                     }`}
                     disabled={
                       song
-                        ? song === songListWithIndex[songListWithIndex.length - 1]
+                        ? song ===
+                          songListWithIndex[songListWithIndex.length - 1]
                         : false
                     }
                     onClick={() => handleNextPrevious("next")}
@@ -195,7 +205,11 @@ const SongDetails = () => {
                     <img src={NextIcon} alt="Sound Icon" />
                   </button>
                 </div>
-                <button className="sound" onClick={handleSound}>
+                <button
+                  className="sound"
+                  aria-label="Sound"
+                  onClick={handleSound}
+                >
                   {ref.current.muted ? (
                     <FaVolumeMute />
                   ) : (
@@ -237,19 +251,25 @@ const SongDetails = () => {
             <div className="action">
               <div className="main-action">
                 <button
+                  aria-label="Previous Song"
                   className={`previous ${song.index === 0 ? "disabled" : ""}`}
                   disabled={song ? song === songListWithIndex[0] : false}
                   onClick={() => handleNextPrevious("prev")}
                 >
                   <img src={PreviousIcon} alt="Sound Icon" />
                 </button>
-                <button className="play-pause-btn" onClick={handlePlayPause}>
+                <button
+                  className="play-pause-btn"
+                  onClick={handlePlayPause}
+                  aria-label="Play/Pause"
+                >
                   <img
                     src={isPlaying ? PauseIcon : PlayIcon}
                     alt="Sound Icon"
                   />
                 </button>
                 <button
+                  aria-label="Next Song"
                   className={`next ${
                     song.index === songList[0]?.length - 1 ? "disabled" : ""
                   }`}

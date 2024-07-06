@@ -1,16 +1,23 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { FiSearch } from "react-icons/fi";
+import { RxCross2 } from "react-icons/rx";
 import { useDispatch, useSelector } from "react-redux";
 import { addSongList, clearAllSongList } from "../../store/songListSlice";
 import {
   addCurrentSong,
   removeCurrentSong,
 } from "../../store/currentSongSlice";
+import useThrottle from "../hooks/useThrottle";
+
 const SongList = () => {
   const API_URL = "https://cms.samespace.com/items/songs";
   const dispatch = useDispatch();
-  const currentPlayingSong = useSelector((state) => state.currentSong.items);
+  const throttleSearch = useThrottle;
+  const currentPlayingSong = useSelector((state) => state.currentSong?.items);
 
+  const [inputIcon, setInputIcon] = useState(
+    <FiSearch onClick={() => handleSearch(inputRef?.current?.value)} />
+  );
   const [songList, setSongList] = useState([]);
   const [topTracks, setTopTracks] = useState([]);
   const [showTopTracks, setShowTopTracks] = useState(false);
@@ -18,12 +25,14 @@ const SongList = () => {
   const [errorMsg, setErrMsg] = useState("");
   const inputRef = useRef();
 
+  // function to set the duration
   const formatDuration = (seconds) => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = Math.floor(seconds % 60);
     return `${minutes}:${remainingSeconds < 10 ? "0" : ""}${remainingSeconds}`;
   };
 
+  // function to fetch songs
   const fetchSongs = async () => {
     try {
       const response = await fetch(API_URL);
@@ -34,14 +43,14 @@ const SongList = () => {
     }
   };
 
+  //function to set duration for all songList. 
   const handleAllSongWithDuration = async (songs) => {
     const songsWithDuration = await Promise.all(
-      songs.map(async (song, index) => {
+      songs.map(async (song) => {
         const audio = new Audio(song.url);
         await new Promise((resolve) => {
           audio.addEventListener("loadedmetadata", () => {
             song.duration = formatDuration(audio.duration);
-            // song.index = index;
             resolve();
           });
         });
@@ -51,11 +60,9 @@ const SongList = () => {
 
     setSongList(songsWithDuration);
     setAllSongsList(songsWithDuration);
-    // console.log(songsWithDuration, "songsWithDuration");
-    // dispatch(clearAllSongList());
-    // dispatch(addSongList(songsWithDuration));
-    handleTabChange('all', songsWithDuration);
+    handleTabChange("all", songsWithDuration);
 
+    // filtering for top tracks
     if (songsWithDuration.length > 0) {
       let topTracks = songsWithDuration.filter((song) => {
         return song["top_track"] === true;
@@ -69,6 +76,7 @@ const SongList = () => {
     fetchSongs();
   }, []);
 
+  // changing the background color based on current song
   useEffect(() => {
     if (currentPlayingSong) {
       const rgb = hexToRgb(currentPlayingSong.accent);
@@ -87,11 +95,13 @@ const SongList = () => {
     }
   }, [currentPlayingSong]);
 
+  //setting current playing song
   const setCurrentSong = (song) => {
     dispatch(removeCurrentSong());
     dispatch(addCurrentSong(song));
   };
 
+  // function to convert hex to rgb as we are getting response as hex
   const hexToRgb = (hex = "#000000") => {
     hex = hex?.replace(/^#/, "");
 
@@ -102,6 +112,7 @@ const SongList = () => {
     return { r, g, b };
   };
 
+  // function to handle tab change
   const handleTabChange = (tabName = "all", allSongs) => {
     const tabs = document.getElementsByClassName("navigation-item");
     dispatch(clearAllSongList());
@@ -111,7 +122,6 @@ const SongList = () => {
       setShowTopTracks(false);
       dispatch(addSongList(allSongs));
     } else if (tabName === "top") {
-      // dispatch(removeCurrentSong());
       tabs[1].classList.add("active");
       tabs[0].classList.remove("active");
       setShowTopTracks(true);
@@ -119,6 +129,7 @@ const SongList = () => {
     }
   };
 
+  //based on topTrack show or not setting up the list to show
   useEffect(() => {
     let val = allSongsList;
     if (showTopTracks) {
@@ -130,24 +141,44 @@ const SongList = () => {
     setSongList(val);
   }, [showTopTracks]);
 
-  const handleSearch = (value) => {
-    if (value) {
-      let filteredList = allSongsList.filter(
-        (song) =>
-          song.name.toLowerCase().includes(value.toLowerCase()) ||
-          song.artist.toLowerCase().includes(value.toLowerCase())
-      );
-
-      if (filteredList.length === 0) {
-        setSongList([]);
-        setErrMsg("No songs found");
+  // function to handle search
+  const handleSearch = useCallback(
+    throttleSearch((value) => {
+      //handling the input icon based on the value
+      if (value !== "") {
+        setInputIcon(
+          <RxCross2
+            onClick={() => {
+              inputRef.current.value = null;
+              console.log("input ref", inputRef.current.value);
+              handleSearch("");
+            }}
+          />
+        );
       } else {
-        setSongList(filteredList);
+        setInputIcon(FiSearch);
       }
-    } else {
-      setSongList(allSongsList);
-    }
-  };
+
+      // performing search
+      if (value) {
+        let filteredList = allSongsList.filter(
+          (song) =>
+            song.name.toLowerCase().includes(value.toLowerCase()) ||
+            song.artist.toLowerCase().includes(value.toLowerCase())
+        );
+
+        if (filteredList.length === 0) {
+          setSongList([]);
+          setErrMsg("No songs found ☹️");
+        } else {
+          setSongList(filteredList);
+        }
+      } else {
+        setSongList(allSongsList);
+      }
+    }, 700),
+    [allSongsList]
+  );
 
   return (
     <div className="song-list__container">
@@ -174,9 +205,7 @@ const SongList = () => {
           className="search-bar__input"
           onChange={(e) => handleSearch(e.target.value)}
         />
-        <button className="search-bar__button">
-          <FiSearch />
-        </button>
+        <button className="search-bar__button" aria-label="search">{inputIcon}</button>
       </div>
 
       <div className="song-list__items">
