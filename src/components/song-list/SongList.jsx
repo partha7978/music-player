@@ -43,7 +43,7 @@ const SongList = () => {
     }
   };
 
-  //function to set duration for all songList. 
+  //function to set duration for all songList.
   const handleAllSongWithDuration = async (songs) => {
     const songsWithDuration = await Promise.all(
       songs.map(async (song) => {
@@ -113,7 +113,7 @@ const SongList = () => {
   };
 
   // function to handle tab change
-  const handleTabChange = (tabName = "all", allSongs) => {
+  const handleTabChange = (tabName = "all", allSongs = allSongsList) => {
     const tabs = document.getElementsByClassName("navigation-item");
     dispatch(clearAllSongList());
     if (tabName === "all") {
@@ -205,7 +205,9 @@ const SongList = () => {
           className="search-bar__input"
           onChange={(e) => handleSearch(e.target.value)}
         />
-        <button className="search-bar__button" aria-label="search">{inputIcon}</button>
+        <button className="search-bar__button" aria-label="search">
+          {inputIcon}
+        </button>
       </div>
 
       <div className="song-list__items">

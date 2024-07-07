@@ -38,7 +38,7 @@ const SongDetails = () => {
   // function to set the index
   const setSongsWithIndex = async (songList) => {
     const songsWithDuration = await Promise.all(
-      songList.map(async (song, index) => {
+      songList && songList.map(async (song, index) => {
         const audio = new Audio(song.url);
         await new Promise((resolve) => {
           audio.addEventListener("loadedmetadata", () => {
@@ -49,7 +49,6 @@ const SongDetails = () => {
         return { ...song, index };
       })
     );
-
     setSongListWithIndex(songsWithDuration);
   };
 
@@ -107,7 +106,6 @@ const SongDetails = () => {
     const currentSongIndex = songListWithIndex.findIndex(
       (song) => song.id === playSong.id
     );
-
     if (currentSongIndex !== undefined) {
       let newIndex;
       if (type === "next") {
